@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Runs as the unprivileged user. Supervises:
-#   1. Chrome Remote Desktop host  (registered from .env on first start, or by hand)
+#   1. Chrome Remote Desktop host  (unless CRD_ENABLED=false or a headless build;
+#                                   registered from .env on first start, or by hand)
 #   2. VS Code tunnel               (unless VSCODE_TUNNEL_ENABLED=false)
 # Neither needs an inbound port: both dial out to Google / Microsoft.
 set -uo pipefail
@@ -9,6 +10,8 @@ CRD_SCRIPT=/opt/google/chrome-remote-desktop/chrome-remote-desktop
 CRD_CONFIG_DIR="$HOME/.config/chrome-remote-desktop"
 COMPUTER_NAME="${COMPUTER_NAME:-$(hostname)}"
 POLL_SECONDS=15
+CRD_ENABLED="${CRD_ENABLED:-true}"
+CRD_BUILT="$(cat /etc/crd-enabled 2>/dev/null || echo false)"
 
 crd_pid=""
 tunnel_pid=""
@@ -19,6 +22,7 @@ cd "$HOME"
 mkdir -p "$CRD_CONFIG_DIR"
 
 crd_registered() { compgen -G "$CRD_CONFIG_DIR/host#*.json" >/dev/null; }
+crd_wanted() { [ "$CRD_ENABLED" = true ] && [ "$CRD_BUILT" = true ]; }
 alive() { [ -n "$1" ] && kill -0 "$1" 2>/dev/null; }
 
 # One-shot registration from the environment (CRD_CODE, CRD_PIN in .env).
@@ -67,7 +71,12 @@ shutdown() {
 }
 trap shutdown TERM INT
 
-if ! crd_registered; then
+if [ "$CRD_ENABLED" != true ]; then
+    log "Chrome Remote Desktop disabled (CRD_ENABLED=false)"
+elif [ "$CRD_BUILT" != true ]; then
+    log "Chrome Remote Desktop requested but this image was built headless (CRD_ENABLED=false at build)."
+    log "Set CRD_ENABLED=true in .env and run: docker compose build && docker compose up -d --force-recreate"
+elif ! crd_registered; then
     if [ -n "${CRD_CODE:-}" ]; then
         register_crd_from_env
     else
@@ -77,7 +86,7 @@ if ! crd_registered; then
 fi
 
 while true; do
-    if crd_registered && ! alive "$crd_pid"; then
+    if crd_wanted && crd_registered && ! alive "$crd_pid"; then
         start_crd
     fi
     if [ "${VSCODE_TUNNEL_ENABLED:-true}" = "true" ] && ! alive "$tunnel_pid"; then

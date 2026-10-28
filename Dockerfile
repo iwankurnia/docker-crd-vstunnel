@@ -1,8 +1,12 @@
 # syntax=docker/dockerfile:1
 #
-# Debian 13 (trixie) desktop reachable from anywhere through
-#   - Chrome Remote Desktop (XFCE session on a virtual X display)
-#   - VS Code tunnel (the `code` CLI)
+# Debian 13 (trixie) development box reachable from anywhere through
+#   - VS Code tunnel (the `code` CLI), always
+#   - Chrome Remote Desktop (XFCE session on a virtual X display), when
+#     CRD_ENABLED=true (the default)
+#
+# CRD_ENABLED=false builds a headless image: no X server, desktop, themes,
+# icons, UI fonts or desktop apps, only the toolchain and the tunnel.
 #
 # Google only ships the Chrome Remote Desktop host for amd64, so the image is
 # pinned to linux/amd64. On an Apple Silicon or other arm64 host it runs under
@@ -13,8 +17,13 @@ FROM --platform=linux/amd64 debian:trixie-slim
 ARG USERNAME=remote
 ARG USER_UID=1000
 ARG USER_GID=1000
-# Space-separated extra apt packages, e.g. "firefox-esr chromium"
+# Chrome Remote Desktop and the whole graphical desktop: "true" or "false".
+ARG CRD_ENABLED=true
+# Space-separated extra apt packages installed in every build (CLI tools).
 ARG EXTRA_PACKAGES=""
+# Extra apt packages installed only with CRD_ENABLED=true (desktop apps),
+# e.g. "firefox-esr chromium".
+ARG EXTRA_UI_PACKAGES=""
 # Desktop layout baked into the image: "mac" or "windows" (see desktop/).
 ARG DESKTOP_LAYOUT=mac
 # Developer toolchain versions.
@@ -27,31 +36,41 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LANG=en_GB.UTF-8 \
     LC_ALL=en_GB.UTF-8
 
-# Base tools, XFCE desktop and the Chrome Remote Desktop host's dependencies.
+# Base: headless tools, always installed.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates curl gnupg sudo locales tzdata procps psmisc less nano \
         git git-lfs openssh-client build-essential pkg-config unzip \
-        python3-pip python3-venv python3-dev pipx \
+        python3 python3-pip python3-venv python3-dev pipx \
         libicu76 libgssapi-krb5-2 \
-        dbus-x11 xfce4 xfce4-terminal thunar mousepad \
-        xserver-xorg-video-dummy xvfb xbase-clients x11-xserver-utils \
-        fonts-dejavu fonts-inter \
-        arc-theme breeze-icon-theme adwaita-icon-theme gtk-update-icon-cache \
-        xfce4-whiskermenu-plugin xfce4-appfinder xfce4-notifyd xfce4-docklike-plugin \
-        fonts-jetbrains-mono \
-        python3 python3-dbus python3-packaging python3-psutil python3-xdg \
-        xdg-utils gsettings-desktop-schemas pkexec libgbm1 \
         ${EXTRA_PACKAGES} \
     && sed -i 's/^# *en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen \
     && locale-gen \
     && rm -rf /var/lib/apt/lists/*
 
-# Chrome Remote Desktop host (amd64 only).
-RUN curl -fsSL -o /tmp/crd.deb \
-        https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends /tmp/crd.deb \
-    && rm -rf /var/lib/apt/lists/* /tmp/crd.deb
+# Graphical desktop and the Chrome Remote Desktop host, only when enabled:
+# XFCE, the virtual X server, themes, icon fallbacks, UI fonts, the CRD host's
+# dependencies, the host itself (amd64 only) and any desktop apps. The profile
+# is recorded in /etc/crd-enabled so the runtime scripts can check it.
+RUN set -eu; \
+    case "$CRD_ENABLED" in true|false) ;; *) echo "CRD_ENABLED must be true or false" >&2; exit 1;; esac; \
+    echo "$CRD_ENABLED" > /etc/crd-enabled; \
+    if [ "$CRD_ENABLED" = true ]; then \
+        apt-get update; \
+        apt-get install -y --no-install-recommends \
+            dbus-x11 xfce4 xfce4-terminal thunar mousepad \
+            xserver-xorg-video-dummy xvfb xbase-clients x11-xserver-utils \
+            fonts-dejavu fonts-inter fonts-jetbrains-mono \
+            arc-theme breeze-icon-theme adwaita-icon-theme gtk-update-icon-cache \
+            xfce4-whiskermenu-plugin xfce4-appfinder xfce4-notifyd xfce4-docklike-plugin \
+            python3-dbus python3-packaging python3-psutil python3-xdg \
+            xdg-utils gsettings-desktop-schemas pkexec libgbm1 \
+            ${EXTRA_UI_PACKAGES}; \
+        curl -fsSL -o /tmp/crd.deb \
+            https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb; \
+        apt-get install -y --no-install-recommends /tmp/crd.deb; \
+        rm -rf /var/lib/apt/lists/* /tmp/crd.deb; \
+        printf 'exec /etc/X11/Xsession /usr/bin/xfce4-session\n' > /etc/chrome-remote-desktop-session; \
+    fi
 
 # VS Code CLI (provides `code tunnel`).
 RUN curl -fsSL -o /tmp/vscode_cli.tar.gz \
@@ -86,16 +105,17 @@ RUN set -eu; \
     printf '%s\n' 'export NVM_DIR=/opt/nvm' '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' '[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"' 'export PATH="$PATH:$HOME/.dotnet/tools:$HOME/.local/bin"' > /etc/profile.d/dev-toolchain.sh; \
     printf '\n# Developer toolchain (nvm, .NET tools, pipx) for interactive shells\n. /etc/profile.d/dev-toolchain.sh\n' >> /etc/bash.bashrc
 
-# Desktop layout: XFCE config files for the chosen layout go into /etc/skel so
-# the user account created below starts with them. Both layouts share the light
-# Arc theme, Inter and JetBrains Mono fonts and a GTK stylesheet. Icons are
-# platform-matched: WhiteSur (macOS-style) for "mac", Fluent (Windows-style) for
-# "windows", both pinned to a release tag and falling back to Breeze for any
-# icon they lack. "mac" also gets a docklike Dock and the soft light gradient
-# wallpaper shipped in desktop/wallpaper/; the Dock pins whichever of the
-# listed apps are installed.
+# Desktop layout (only with CRD_ENABLED=true): XFCE config files for the chosen
+# layout go into /etc/skel so the user account created below starts with them.
+# Both layouts share the light Arc theme, Inter and JetBrains Mono fonts and a
+# GTK stylesheet. Icons are platform-matched: WhiteSur (macOS-style) for "mac",
+# Fluent (Windows-style) for "windows", both pinned to a release tag and falling
+# back to Breeze for any icon they lack. "mac" also gets a docklike Dock and the
+# soft light gradient wallpaper shipped in desktop/wallpaper/; the Dock pins
+# whichever of the listed apps are installed.
 COPY desktop/ /opt/desktop-layouts/
 RUN set -eu; \
+    if [ "$CRD_ENABLED" != true ]; then echo "headless build: skipping desktop layout"; exit 0; fi; \
     case "$DESKTOP_LAYOUT" in mac|windows) ;; *) echo "DESKTOP_LAYOUT must be mac or windows" >&2; exit 1;; esac; \
     cp -a /opt/desktop-layouts/common/. /etc/skel/; \
     cp -a "/opt/desktop-layouts/$DESKTOP_LAYOUT/." /etc/skel/; \
@@ -129,14 +149,12 @@ RUN set -eu; \
 # Non-root user: the Chrome Remote Desktop host refuses to run as root, and
 # the VS Code tunnel is happier as a normal user too. Its password and sudo
 # policy are applied at start-up by entrypoint.sh from USER_PASSWORD, so no
-# secret is baked into the image. Also writes the session script the host
-# launches on its virtual display (/etc/chrome-remote-desktop-session).
+# secret is baked into the image. The chrome-remote-desktop group exists in
+# both profiles so the account definition does not depend on CRD_ENABLED.
 RUN groupadd -f chrome-remote-desktop \
     && groupadd -g ${USER_GID} ${USERNAME} \
     && useradd -m -u ${USER_UID} -g ${USER_GID} -s /bin/bash \
         -G sudo,chrome-remote-desktop ${USERNAME} \
-    && printf 'exec /etc/X11/Xsession /usr/bin/xfce4-session\n' \
-        > /etc/chrome-remote-desktop-session \
     && mkdir -p /home/${USERNAME}/workspace \
     && chown -R ${USER_UID}:${USER_GID} /home/${USERNAME} /opt/nvm
 

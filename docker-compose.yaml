@@ -14,12 +14,15 @@ services:
       args:
         # Changing USERNAME needs a rebuild (the account is created in the image).
         USERNAME: ${USERNAME:-remote}
+        # false = headless image: no desktop, X server, themes, icons or UI apps.
+        CRD_ENABLED: ${CRD_ENABLED:-true}
         # "mac" or "windows" desktop layout; a rebuild applies a change.
         DESKTOP_LAYOUT: ${DESKTOP_LAYOUT:-mac}
         # Developer toolchain: default Node major and .NET SDK channels.
         NODE_DEFAULT: ${NODE_DEFAULT:-22}
         DOTNET_CHANNELS: ${DOTNET_CHANNELS:-8.0 10.0}
         EXTRA_PACKAGES: ${EXTRA_PACKAGES:-}
+        EXTRA_UI_PACKAGES: ${EXTRA_UI_PACKAGES:-}
     image: debian-remote-desktop:local
     container_name: debian-remote-desktop
     # COMPUTER_NAME is the hostname, the VS Code tunnel name and the
@@ -33,6 +36,8 @@ services:
       COMPUTER_NAME: ${COMPUTER_NAME:-debian-remote}
       # Applied at every start by entrypoint.sh; sudo asks for it.
       USER_PASSWORD: ${USER_PASSWORD:-}
+      # Runtime switches for the two services.
+      CRD_ENABLED: ${CRD_ENABLED:-true}
       VSCODE_TUNNEL_ENABLED: ${VSCODE_TUNNEL_ENABLED:-true}
       # Virtual display size(s) offered to Chrome Remote Desktop clients.
       CHROME_REMOTE_DESKTOP_DEFAULT_DESKTOP_SIZES: ${CRD_DESKTOP_SIZES:-1920x1080,2560x1440}

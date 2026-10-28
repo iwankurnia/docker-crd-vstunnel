@@ -5,6 +5,10 @@
 # XFCE session picks the files up:
 #   docker compose exec -u <USERNAME> desktop apply-desktop-layout.sh && docker compose restart
 set -euo pipefail
+if [ ! -f /etc/desktop-layout ]; then
+    echo "This image was built headless (CRD_ENABLED=false): there is no desktop layout to apply." >&2
+    exit 1
+fi
 cd "$HOME"
 X=.config/xfce4/xfconf/xfce-perchannel-xml
 rm -rf "$X/xfce4-panel.xml" "$X/xfwm4.xml" "$X/xsettings.xml" "$X/xfce4-keyboard-shortcuts.xml" \

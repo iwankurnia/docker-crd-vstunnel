@@ -1,9 +1,13 @@
 # Debian remote desktop in Docker
 
-A Debian 13 (trixie) container with an XFCE 4.20 desktop, laid out like macOS or Windows, that you can reach from anywhere through:
+A Debian 13 (trixie) development container that you can reach from anywhere through:
 
-- **Chrome Remote Desktop** (full graphical desktop in a browser or the CRD app)
-- **VS Code tunnel** (open it from VS Code Desktop or vscode.dev)
+- **VS Code tunnel** (open it from VS Code Desktop or vscode.dev), always
+- **Chrome Remote Desktop** (an XFCE 4.20 desktop laid out like macOS or Windows,
+  in a browser or the CRD app), unless you build it headless with `CRD_ENABLED=false`
+
+The developer toolchain (git, nvm with Node 22, Python 3, .NET 8 and 10) is in
+both profiles.
 
 Both services dial *out* to Google and Microsoft, so the container publishes no
 ports and works behind NAT, on a home server, a VPS or a laptop.
@@ -31,8 +35,10 @@ ports and works behind NAT, on a home server, a VPS or a laptop.
 | `NODE_DEFAULT`, `DOTNET_CHANNELS` | Node major and .NET SDK channels baked in at build time (see **Developer tools**) |
 | `USER_PASSWORD` | Password for that account. Applied at every start; `sudo` asks for it. Empty = passwordless sudo (a warning is logged) |
 | `CRD_CODE`, `CRD_PIN` | One-shot Chrome Remote Desktop registration on first start (see below) |
+| `CRD_ENABLED` | `false` builds and runs **headless**: no X server, XFCE, themes, icons, UI fonts, CRD host or desktop apps (see **Headless mode**). Build-time and run-time |
 | `VSCODE_TUNNEL_ENABLED` | `false` to run Chrome Remote Desktop only |
-| `TZ`, `CRD_DESKTOP_SIZES`, `EXTRA_PACKAGES` | Timezone, virtual display sizes, extra apt packages (e.g. `firefox-esr`) |
+| `EXTRA_PACKAGES`, `EXTRA_UI_PACKAGES` | Extra apt packages: the first in every build (CLI tools), the second only with the desktop (e.g. `firefox-esr`) |
+| `TZ`, `CRD_DESKTOP_SIZES` | Timezone, virtual display sizes |
 
 ## First run
 
@@ -153,6 +159,29 @@ with a new session. Thunar opens in icon view with the sidebar, the terminal use
 JetBrains Mono on a light GitHub-style palette, and the desktop shows no icons in
 `mac` and This PC / user folder / Recycle Bin in `windows`.
 
+## Headless mode
+
+`CRD_ENABLED=false` in `.env` gives a lean image for VS Code tunnel use only.
+It is a build-time switch as well as a run-time one, so after changing it run:
+
+```bash
+docker compose build && docker compose up -d --force-recreate
+```
+
+| | `CRD_ENABLED=true` (default) | `CRD_ENABLED=false` |
+|---|---|---|
+| VS Code tunnel | yes | yes |
+| Developer tools (git, nvm/Node, Python, .NET) | yes | yes |
+| Chrome Remote Desktop host | yes | not installed |
+| XFCE, virtual X server, D-Bus | yes | not installed |
+| Arc theme, icon packs, UI fonts, desktop layout | yes | not installed |
+| `EXTRA_PACKAGES` | installed | installed |
+| `EXTRA_UI_PACKAGES` (e.g. Firefox) | installed | skipped |
+
+If the container is started with `CRD_ENABLED=true` on an image that was built
+headless, the log says so and the tunnel still runs; rebuild to add the desktop.
+`apply-desktop-layout.sh` refuses to run on a headless image.
+
 ## Developer tools
 
 Baked into the image, available in Chrome Remote Desktop terminals and VS Code
@@ -203,7 +232,7 @@ docker compose build --pull --no-cache && docker compose up -d
 - **Architecture.** Google only publishes the CRD host for amd64, so the image is
   pinned to `linux/amd64`. On Apple Silicon Docker Desktop runs it under
   emulation, which works but is slow; a Linux amd64 host is the intended home.
-- **Browser inside the desktop.** `EXTRA_PACKAGES=firefox-esr` bakes in Firefox.
+- **Browser inside the desktop.** `EXTRA_UI_PACKAGES=firefox-esr` bakes in Firefox (desktop builds only).
   Chromium can be added too, but inside a container it must be launched with
   `--no-sandbox`.
 - **Audio** is not configured (no PipeWire/PulseAudio). CRD logs a warning and

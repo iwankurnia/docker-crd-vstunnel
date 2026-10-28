@@ -27,8 +27,9 @@ if [ -d "$USER_HOME/workspace" ]; then
     chown "$USER_UID:$USER_GID" "$USER_HOME/workspace"
 fi
 
-# A system D-Bus keeps XFCE and polkit quiet. Harmless if it fails.
-if [ ! -S /run/dbus/system_bus_socket ]; then
+# A system D-Bus keeps XFCE and polkit quiet. Only in a desktop (CRD) build;
+# harmless if it fails.
+if [ "$(cat /etc/crd-enabled 2>/dev/null)" = true ] && [ ! -S /run/dbus/system_bus_socket ]; then
     mkdir -p /run/dbus && rm -f /run/dbus/pid
     dbus-daemon --system --fork >/dev/null 2>&1 || log "system dbus not started (continuing)"
 fi
