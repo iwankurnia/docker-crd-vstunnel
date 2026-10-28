@@ -1,4 +1,4 @@
-# Debian remote desktop in Docker
+# docker-crd-vstunnel
 
 A Debian 13 (trixie) development container that you can reach from anywhere through:
 

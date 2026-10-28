@@ -5,7 +5,7 @@
 #   docker compose up -d --build
 #   docker compose logs -f      # VS Code device-login URL appears here
 
-name: debian-remote
+name: docker-crd-vstunnel
 
 services:
   desktop:
@@ -23,8 +23,8 @@ services:
         DOTNET_CHANNELS: ${DOTNET_CHANNELS:-8.0 10.0}
         EXTRA_PACKAGES: ${EXTRA_PACKAGES:-}
         EXTRA_UI_PACKAGES: ${EXTRA_UI_PACKAGES:-}
-    image: debian-remote-desktop:local
-    container_name: debian-remote-desktop
+    image: docker-crd-vstunnel:local
+    container_name: docker-crd-vstunnel
     # COMPUTER_NAME is the hostname, the VS Code tunnel name and the
     # Chrome Remote Desktop device name.
     hostname: ${COMPUTER_NAME:-debian-remote}
