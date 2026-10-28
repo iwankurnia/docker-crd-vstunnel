@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Desktop layout setup
+Exec=sh -c "$HOME/bin/desktop-setup.sh"
+OnlyShowIn=XFCE;
+NoDisplay=true

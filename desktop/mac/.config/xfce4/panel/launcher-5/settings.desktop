@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=System Settings
+Comment=Desktop, display, keyboard and appearance settings
+Exec=xfce4-settings-manager
+Icon=preferences-system-symbolic
+NoDisplay=true

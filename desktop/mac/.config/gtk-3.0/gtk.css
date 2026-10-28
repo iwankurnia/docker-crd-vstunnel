@@ -1,0 +1,58 @@
+/* macOS-style chrome for the XFCE panels. Edit freely; the panel reloads on
+   the next session. Panel 1 is the menu bar, panel 2 is the Dock. */
+
+/* Menu bar: light, slightly translucent, hairline at the bottom */
+.xfce4-panel.panel-1 {
+  background-color: rgba(246, 246, 248, 0.88);
+  color: #1d1d1f;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.10);
+  font-weight: 500;
+}
+.xfce4-panel.panel-1 button,
+.xfce4-panel.panel-1 button.flat {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 0 7px;
+  margin: 3px 0;
+  color: inherit;
+  box-shadow: none;
+}
+.xfce4-panel.panel-1 button:hover,
+.xfce4-panel.panel-1 button:checked,
+.xfce4-panel.panel-1 button:active {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+.xfce4-panel.panel-1 .separator { color: transparent; }
+
+/* Dock: frosted tray with rounded top corners, flush with the bottom edge */
+.xfce4-panel.panel-2 {
+  background-color: rgba(255, 255, 255, 0.66);
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  border-bottom: none;
+  border-radius: 18px 18px 0 0;
+  padding: 3px 8px 0 8px;
+}
+#docklike-plugin .group {
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  margin: 2px 1px;
+  padding: 4px;
+  box-shadow: none;
+  transition: background-color 120ms ease-in-out;
+}
+#docklike-plugin .group:hover,
+#docklike-plugin .group.hover_group { background-color: rgba(0, 0, 0, 0.06); }
+#docklike-plugin .group.active_group { background-color: rgba(0, 0, 0, 0.10); }
+#docklike-plugin .group.open_group   { background-color: rgba(0, 0, 0, 0.08); }
+
+/* Pop-ups: rounded like macOS menus */
+#whiskermenu-window,
+#whiskermenu-window .view,
+.xfce4-panel menu,
+tooltip, tooltip.background {
+  border-radius: 10px;
+}
+tooltip { background-color: rgba(246, 246, 248, 0.96); color: #1d1d1f; border: 1px solid rgba(0,0,0,0.12); }
+tooltip * { color: #1d1d1f; }

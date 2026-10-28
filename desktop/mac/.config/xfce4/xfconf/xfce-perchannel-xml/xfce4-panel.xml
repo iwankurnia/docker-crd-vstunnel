@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfce4-panel" version="1.0">
+  <property name="configver" type="int" value="2"/>
+  <property name="panels" type="array">
+    <value type="int" value="1"/>
+    <value type="int" value="2"/>
+    <property name="dark-mode" type="bool" value="false"/>
+    <!-- Panel 1: macOS menu bar. Left: app menu, active-app menu. Right: search,
+         settings, tray, notifications, clock. Panel 2: the Dock (docklike). -->
+    <property name="panel-1" type="empty">
+      <property name="position" type="string" value="p=6;x=0;y=0"/>
+      <property name="length" type="uint" value="100"/>
+      <property name="position-locked" type="bool" value="true"/>
+      <property name="size" type="uint" value="28"/>
+      <property name="icon-size" type="uint" value="18"/>
+      <property name="background-style" type="uint" value="0"/>
+      <property name="plugin-ids" type="array">
+        <value type="int" value="1"/>
+        <value type="int" value="2"/>
+        <value type="int" value="3"/>
+        <value type="int" value="4"/>
+        <value type="int" value="5"/>
+        <value type="int" value="6"/>
+        <value type="int" value="7"/>
+        <value type="int" value="8"/>
+      </property>
+    </property>
+    <!-- The Dock: bottom centre, auto-width, pinned + running apps -->
+    <property name="panel-2" type="empty">
+      <property name="position" type="string" value="p=10;x=0;y=0"/>
+      <property name="length" type="uint" value="1"/>
+      <property name="length-adjust" type="bool" value="true"/>
+      <property name="position-locked" type="bool" value="true"/>
+      <property name="size" type="uint" value="60"/>
+      <property name="icon-size" type="uint" value="0"/>
+      <property name="background-style" type="uint" value="0"/>
+      <property name="autohide-behavior" type="uint" value="0"/>
+      <property name="plugin-ids" type="array">
+        <value type="int" value="20"/>
+      </property>
+    </property>
+  </property>
+  <property name="plugins" type="empty">
+    <!-- "Apple" menu -->
+    <property name="plugin-1" type="string" value="whiskermenu"/>
+    <!-- Active application: its icon, click for its window list -->
+    <property name="plugin-2" type="string" value="windowmenu">
+      <property name="style" type="uint" value="0"/>
+      <property name="all-workspaces" type="bool" value="false"/>
+      <property name="workspace-actions" type="bool" value="false"/>
+      <property name="urgentcy-notification" type="bool" value="true"/>
+    </property>
+    <property name="plugin-3" type="string" value="separator">
+      <property name="expand" type="bool" value="true"/>
+      <property name="style" type="uint" value="0"/>
+    </property>
+    <!-- Spotlight-style search -->
+    <property name="plugin-4" type="string" value="launcher">
+      <property name="items" type="array">
+        <value type="string" value="search.desktop"/>
+      </property>
+      <property name="show-label" type="bool" value="false"/>
+      <property name="disable-tooltips" type="bool" value="false"/>
+    </property>
+    <!-- Control Centre-style settings -->
+    <property name="plugin-5" type="string" value="launcher">
+      <property name="items" type="array">
+        <value type="string" value="settings.desktop"/>
+      </property>
+      <property name="show-label" type="bool" value="false"/>
+    </property>
+    <property name="plugin-6" type="string" value="systray">
+      <property name="square-icons" type="bool" value="true"/>
+      <property name="icon-size" type="int" value="18"/>
+      <property name="symbolic-icons" type="bool" value="true"/>
+    </property>
+    <!-- Notification Centre bell with Do Not Disturb -->
+    <property name="plugin-7" type="string" value="notification-plugin"/>
+    <property name="plugin-8" type="string" value="clock">
+      <property name="mode" type="uint" value="2"/>
+      <property name="digital-layout" type="uint" value="3"/>
+      <property name="digital-time-format" type="string" value="%a %-d %b  %H:%M"/>
+      <property name="digital-time-font" type="string" value="Inter Semi-Bold 10"/>
+    </property>
+    <property name="plugin-20" type="string" value="docklike"/>
+  </property>
+</channel>

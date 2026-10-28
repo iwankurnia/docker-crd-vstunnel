@@ -1,0 +1,19 @@
+[Configuration]
+FontName=JetBrains Mono 11
+MiscMenubarDefault=FALSE
+MiscToolbarDefault=FALSE
+MiscBordersDefault=FALSE
+MiscCursorShape=TERMINAL_CURSOR_SHAPE_IBEAM
+MiscCursorBlinks=TRUE
+MiscBell=FALSE
+ScrollbarPosition=TERMINAL_SCROLLBAR_RIGHT
+ScrollingLines=20000
+ScrollingUnlimited=FALSE
+ColorForeground=#24292e
+ColorBackground=#ffffff
+ColorCursor=#044289
+ColorSelectionUseDefault=FALSE
+ColorSelection=#0366d6
+ColorSelectionBackground=#dbedff
+ColorBold=#24292e
+ColorPalette=#24292e;#d73a49;#22863a;#b08800;#0366d6;#6f42c1;#1b7c83;#6a737d;#959da5;#cb2431;#28a745;#dbab09;#2188ff;#8a63d2;#3192aa;#d1d5da

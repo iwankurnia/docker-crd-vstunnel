@@ -1,0 +1,53 @@
+# Debian desktop reachable via Chrome Remote Desktop and a VS Code tunnel.
+# No ports are published: both services make outbound connections only.
+#
+#   cp .env.example .env        # set COMPUTER_NAME, USERNAME, USER_PASSWORD, ...
+#   docker compose up -d --build
+#   docker compose logs -f      # VS Code device-login URL appears here
+
+name: debian-remote
+
+services:
+  desktop:
+    build:
+      context: .
+      args:
+        # Changing USERNAME needs a rebuild (the account is created in the image).
+        USERNAME: ${USERNAME:-remote}
+        # "mac" or "windows" desktop layout; a rebuild applies a change.
+        DESKTOP_LAYOUT: ${DESKTOP_LAYOUT:-mac}
+        # Developer toolchain: default Node major and .NET SDK channels.
+        NODE_DEFAULT: ${NODE_DEFAULT:-22}
+        DOTNET_CHANNELS: ${DOTNET_CHANNELS:-8.0 10.0}
+        EXTRA_PACKAGES: ${EXTRA_PACKAGES:-}
+    image: debian-remote-desktop:local
+    container_name: debian-remote-desktop
+    # COMPUTER_NAME is the hostname, the VS Code tunnel name and the
+    # Chrome Remote Desktop device name.
+    hostname: ${COMPUTER_NAME:-debian-remote}
+    # Chrome Remote Desktop host is amd64-only; emulated on arm64 hosts.
+    platform: linux/amd64
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-UTC}
+      COMPUTER_NAME: ${COMPUTER_NAME:-debian-remote}
+      # Applied at every start by entrypoint.sh; sudo asks for it.
+      USER_PASSWORD: ${USER_PASSWORD:-}
+      VSCODE_TUNNEL_ENABLED: ${VSCODE_TUNNEL_ENABLED:-true}
+      # Virtual display size(s) offered to Chrome Remote Desktop clients.
+      CHROME_REMOTE_DESKTOP_DEFAULT_DESKTOP_SIZES: ${CRD_DESKTOP_SIZES:-1920x1080,2560x1440}
+      # One-shot Chrome Remote Desktop registration on first start (see .env.example).
+      CRD_CODE: ${CRD_CODE:-}
+      CRD_PIN: ${CRD_PIN:-}
+      CRD_REDIRECT_URL: ${CRD_REDIRECT_URL:-https://remotedesktop.google.com/_/oauthredirect}
+    volumes:
+      # Whole home directory: keeps the Chrome Remote Desktop registration,
+      # the VS Code tunnel sign-in, extensions and settings across restarts.
+      - home:/home/${USERNAME:-remote}
+      # Your projects, visible on the host as ./workspace
+      - ./workspace:/home/${USERNAME:-remote}/workspace
+    shm_size: 1g
+    stop_grace_period: 30s
+
+volumes:
+  home:

@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=File Explorer
+Exec=thunar
+Icon=system-file-manager
+NoDisplay=true

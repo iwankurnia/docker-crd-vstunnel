@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Web Browser
+Comment=Opens the default browser (install one via EXTRA_PACKAGES)
+Exec=x-www-browser
+Icon=web-browser
+NoDisplay=true

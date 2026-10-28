@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Search
+Comment=Find and launch applications (Super+Space)
+Exec=xfce4-appfinder --collapsed
+Icon=system-search-symbolic
+NoDisplay=true
