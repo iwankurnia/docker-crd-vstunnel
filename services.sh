@@ -19,10 +19,10 @@ tunnel_pid=""
 log() { echo "[services] $*"; }
 
 cd "$HOME"
-mkdir -p "$CRD_CONFIG_DIR"
 
 crd_registered() { compgen -G "$CRD_CONFIG_DIR/host#*.json" >/dev/null; }
 crd_wanted() { [ "$CRD_ENABLED" = true ] && [ "$CRD_BUILT" = true ]; }
+crd_wanted && mkdir -p "$CRD_CONFIG_DIR"
 alive() { [ -n "$1" ] && kill -0 "$1" 2>/dev/null; }
 
 # One-shot registration from the environment (CRD_CODE, CRD_PIN in .env).

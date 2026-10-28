@@ -32,9 +32,7 @@ ARG NODE_DEFAULT=22
 # .NET SDK release channels installed side by side (latest patch of each).
 ARG DOTNET_CHANNELS="8.0 10.0"
 
-ENV DEBIAN_FRONTEND=noninteractive \
-    LANG=en_GB.UTF-8 \
-    LC_ALL=en_GB.UTF-8
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Base: headless tools, always installed.
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -46,6 +44,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && sed -i 's/^# *en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen \
     && locale-gen \
     && rm -rf /var/lib/apt/lists/*
+ENV LANG=en_GB.UTF-8 \
+    LC_ALL=en_GB.UTF-8
 
 # Graphical desktop and the Chrome Remote Desktop host, only when enabled:
 # XFCE, the virtual X server, themes, icon fallbacks, UI fonts, the CRD host's
