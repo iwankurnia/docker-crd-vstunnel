@@ -23,6 +23,7 @@
         <value type="int" value="7"/>
         <value type="int" value="8"/>
         <value type="int" value="9"/>
+        <value type="int" value="13"/>
         <value type="int" value="10"/>
         <value type="int" value="11"/>
         <value type="int" value="12"/>
@@ -77,6 +78,12 @@
     </property>
     <!-- Notification bell with Do Not Disturb -->
     <property name="plugin-9" type="string" value="notification-plugin"/>
+    <!-- Volume (remote audio via the CRD host's PipeWire) -->
+    <property name="plugin-13" type="string" value="pulseaudio">
+      <property name="enable-keyboard-shortcuts" type="bool" value="true"/>
+      <property name="show-notifications" type="bool" value="true"/>
+      <property name="mixer-command" type="string" value="pavucontrol"/>
+    </property>
     <property name="plugin-10" type="string" value="systray">
       <property name="square-icons" type="bool" value="true"/>
       <property name="icon-size" type="int" value="20"/>

@@ -49,7 +49,8 @@ ENV LANG=en_GB.UTF-8 \
 
 # Graphical desktop and the Chrome Remote Desktop host, only when enabled:
 # XFCE, the virtual X server, themes, icon fallbacks, UI fonts, the CRD host's
-# dependencies, the host itself (amd64 only) and any desktop apps. The profile
+# dependencies, the host itself (amd64 only), PipeWire + WirePlumber (the host
+# starts its own instances for remote audio) and any desktop apps. The profile
 # is recorded in /etc/crd-enabled so the runtime scripts can check it.
 RUN set -eu; \
     case "$CRD_ENABLED" in true|false) ;; *) echo "CRD_ENABLED must be true or false" >&2; exit 1;; esac; \
@@ -64,6 +65,7 @@ RUN set -eu; \
             xfce4-whiskermenu-plugin xfce4-appfinder xfce4-notifyd xfce4-docklike-plugin \
             python3-dbus python3-packaging python3-psutil python3-xdg \
             xdg-utils gsettings-desktop-schemas pkexec libgbm1 \
+            pipewire-audio wireplumber pulseaudio-utils pavucontrol xfce4-pulseaudio-plugin \
             ${EXTRA_UI_PACKAGES}; \
         curl -fsSL -o /tmp/crd.deb \
             https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb; \

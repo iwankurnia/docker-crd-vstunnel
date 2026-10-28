@@ -38,7 +38,7 @@ ports and works behind NAT, on a home server, a VPS or a laptop.
 | `CRD_ENABLED` | `false` builds and runs **headless**: no X server, XFCE, themes, icons, UI fonts, CRD host or desktop apps (see **Headless mode**). Build-time and run-time |
 | `VSCODE_TUNNEL_ENABLED` | `false` to run Chrome Remote Desktop only |
 | `EXTRA_PACKAGES`, `EXTRA_UI_PACKAGES` | Extra apt packages: the first in every build (CLI tools), the second only with the desktop (e.g. `firefox-esr`) |
-| `TZ`, `CRD_DESKTOP_SIZES` | Timezone, virtual display sizes |
+| `TZ`, `CRD_DESKTOP_SIZES` | Timezone, initial virtual display size (the desktop then follows the client window) |
 
 ## First run
 
@@ -133,7 +133,7 @@ Fluent's four-square `view-app-grid-symbolic` in `windows`.
 
 | | `mac` (default) | `windows` |
 |---|---|---|
-| Bar | Menu bar across the top: app menu and active-app menu on the left; search, settings, tray, notification bell and clock on the right | Taskbar across the bottom: Start, search, pinned File Explorer/Terminal/Browser, grouped task buttons; notification bell, tray, time-over-date clock and show-desktop corner on the right |
+| Bar | Menu bar across the top: app menu and active-app menu on the left; search, settings, volume, tray, notification bell and clock on the right | Taskbar across the bottom: Start, search, pinned File Explorer/Terminal/Browser, grouped task buttons; notification bell, volume, tray, time-over-date clock and show-desktop corner on the right |
 | Dock | Bottom centre, auto-width, pinned + running apps with dot indicators (docklike plugin) | none (task buttons live in the taskbar) |
 | Window buttons | Close, minimise, maximise on the **left** | Minimise, maximise, close on the **right** |
 | Backdrop | Soft peach-to-blue gradient wallpaper (`desktop/wallpaper/mac.jpg`, swap for any image) | Plain light-blue |
@@ -235,11 +235,17 @@ docker compose build --pull --no-cache && docker compose up -d
 - **Browser inside the desktop.** `EXTRA_UI_PACKAGES=firefox-esr` bakes in Firefox (desktop builds only).
   Chromium can be added too, but inside a container it must be launched with
   `--no-sandbox`.
-- **Audio** is not configured (no PipeWire/PulseAudio). CRD logs a warning and
-  carries on.
+- **Audio.** Remote audio works: the CRD host starts its own PipeWire,
+  PipeWire-Pulse and WirePlumber instances (installed in desktop builds) with a
+  virtual sink that it streams to the client. Apps in the session play through
+  it automatically; the panel has a volume applet and `pavucontrol` as mixer.
+  There is no microphone input and no audio in headless builds.
 - **Security.** Anyone with your Google account + PIN or your GitHub/Microsoft
   account can reach this desktop. `USER_PASSWORD` and `CRD_PIN` sit in plain text
   in `.env` (gitignored); blank `CRD_PIN` once registered. The container runs
   unprivileged with no extra capabilities; only the short start-up runs as root.
-- **Resolution.** `CRD_DESKTOP_SIZES` sets the sizes the virtual display offers;
-  the CRD client can also resize to fit its window.
+- **Resolution.** The desktop follows the client window: with the dummy Xorg
+  driver and RANDR the host adds display modes on the fly whenever the client
+  has "Resize to fit" on (the default in the web client and the app). The first
+  entry of `CRD_DESKTOP_SIZES` is only the size at session start; the rest are
+  offered as fixed choices when resize-to-fit is off.
