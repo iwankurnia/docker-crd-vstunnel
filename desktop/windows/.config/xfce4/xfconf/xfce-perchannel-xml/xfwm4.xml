@@ -7,6 +7,8 @@
     <!-- minimise, maximise, close on the right, like Windows -->
     <property name="button_layout" type="string" value="O|HMC"/>
     <property name="use_compositing" type="bool" value="true"/>
+    <!-- no drop shadow under the panels -->
+    <property name="show_dock_shadow" type="bool" value="false"/>
     <property name="placement_mode" type="string" value="center"/>
     <property name="workspace_count" type="int" value="1"/>
   </property>

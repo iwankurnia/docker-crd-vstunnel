@@ -1,5 +1,5 @@
 button-title=Menu
-button-icon=start-here
+button-icon=/usr/share/icons/WhiteSur/places/scalable/start-here.svg
 show-button-title=false
 show-button-icon=true
 launcher-show-name=true

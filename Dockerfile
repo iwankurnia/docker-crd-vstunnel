@@ -15,8 +15,8 @@
 FROM --platform=linux/amd64 debian:trixie-slim
 
 ARG USERNAME=remote
-ARG USER_UID=1000
-ARG USER_GID=1000
+ARG USER_UID=1001
+ARG USER_GID=1001
 # Chrome Remote Desktop and the whole graphical desktop: "true" or "false".
 ARG CRD_ENABLED=true
 # Space-separated extra apt packages installed in every build (CLI tools).
@@ -58,7 +58,7 @@ RUN set -eu; \
     if [ "$CRD_ENABLED" = true ]; then \
         apt-get update; \
         apt-get install -y --no-install-recommends \
-            dbus-x11 xfce4 xfce4-terminal thunar mousepad \
+            dbus-x11 xfce4 xfce4-terminal thunar mousepad librsvg2-common \
             xserver-xorg-video-dummy xvfb xbase-clients x11-xserver-utils \
             fonts-dejavu fonts-inter fonts-jetbrains-mono \
             arc-theme breeze-icon-theme adwaita-icon-theme gtk-update-icon-cache \
@@ -109,12 +109,14 @@ RUN set -eu; \
 
 # Desktop layout (only with CRD_ENABLED=true): XFCE config files for the chosen
 # layout go into /etc/skel so the user account created below starts with them.
-# Both layouts share the light Arc theme, Inter and JetBrains Mono fonts and a
-# GTK stylesheet. Icons are platform-matched: WhiteSur (macOS-style) for "mac",
-# Fluent (Windows-style) for "windows", both pinned to a release tag and falling
-# back to Breeze for any icon they lack. "mac" also gets a docklike Dock and the
+# Both layouts share the Inter and JetBrains Mono fonts and a GTK stylesheet.
+# "mac" uses the Qogir GTK + xfwm4 theme (light grey, flat, precompiled CSS)
+# with the Qogir icons, falling back to WhiteSur (macOS-style, also installed
+# and the source of the Apple menu icon) and then Breeze; "windows" uses the
+# light Arc theme with Fluent (Windows-style) icons falling back to Breeze.
+# Every theme is pinned to a release tag. "mac" also gets a docklike Dock and the
 # soft light gradient wallpaper shipped in desktop/wallpaper/; the Dock pins
-# whichever of the listed apps are installed.
+# whichever of the listed apps are installed (docklike wants full .desktop paths).
 COPY desktop/ /opt/desktop-layouts/
 RUN set -eu; \
     if [ "$CRD_ENABLED" != true ]; then echo "headless build: skipping desktop layout"; exit 0; fi; \
@@ -123,27 +125,38 @@ RUN set -eu; \
     cp -a "/opt/desktop-layouts/$DESKTOP_LAYOUT/." /etc/skel/; \
     if [ "$DESKTOP_LAYOUT" = mac ]; then layout="close,minimize,maximize:menu"; else layout="menu:minimize,maximize,close"; fi; \
     sed -i "s|@DECORATION_LAYOUT@|$layout|" /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml; \
+    if [ "$DESKTOP_LAYOUT" = mac ]; then gtktheme=Qogir-Light; else gtktheme=Arc; fi; \
+    sed -i "s|@GTK_THEME@|$gtktheme|" /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml; \
     echo "$DESKTOP_LAYOUT" > /etc/desktop-layout; \
     mkdir -p /tmp/icons && cd /tmp/icons; \
     if [ "$DESKTOP_LAYOUT" = mac ]; then \
         curl -fsSL https://github.com/vinceliuice/WhiteSur-icon-theme/archive/refs/tags/2026-09-10.tar.gz | tar -xz; \
-        bash WhiteSur-icon-theme-*/install.sh -d /usr/share/icons; icon=WhiteSur; \
+        bash WhiteSur-icon-theme-*/install.sh -d /usr/share/icons; \
+        curl -fsSL https://github.com/vinceliuice/Qogir-icon-theme/archive/refs/tags/2025-02-15.tar.gz | tar -xz; \
+        bash Qogir-icon-theme-*/install.sh -d /usr/share/icons -t default -c standard; \
+        icon=Qogir; inherits=WhiteSur,breeze,hicolor; \
     else \
         curl -fsSL https://github.com/vinceliuice/Fluent-icon-theme/archive/refs/tags/2026-07-27.tar.gz | tar -xz; \
         bash Fluent-icon-theme-*/install.sh -d /usr/share/icons; icon=Fluent-light; \
-        [ -d "/usr/share/icons/$icon" ] || icon=Fluent; \
+        [ -d "/usr/share/icons/$icon" ] || icon=Fluent; inherits=breeze,hicolor; \
     fi; \
     cd / && rm -rf /tmp/icons; \
     test -f "/usr/share/icons/$icon/index.theme"; \
-    sed -i "s/^Inherits=.*/Inherits=breeze,hicolor/" "/usr/share/icons/$icon/index.theme"; \
+    sed -i "s/^Inherits=.*/Inherits=$inherits/" "/usr/share/icons/$icon/index.theme"; \
     gtk-update-icon-cache -f -q "/usr/share/icons/$icon"; \
     sed -i "s|@ICON_THEME@|$icon|" /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml; \
     if [ "$DESKTOP_LAYOUT" = mac ]; then \
+        mkdir -p /tmp/gtktheme && cd /tmp/gtktheme; \
+        curl -fsSL https://github.com/vinceliuice/Qogir-theme/archive/refs/tags/2025-08-17.tar.gz | tar -xz; \
+        bash Qogir-theme-*/install.sh -d /usr/share/themes -c light; \
+        cd / && rm -rf /tmp/gtktheme; \
+        test -f /usr/share/themes/Qogir-Light/gtk-3.0/gtk.css; test -f /usr/share/themes/Qogir-Light/xfwm4/themerc; \
+        test -f /usr/share/icons/WhiteSur/places/scalable/start-here.svg; \
         mkdir -p /usr/share/backgrounds; \
         cp /opt/desktop-layouts/wallpaper/mac.jpg /usr/share/backgrounds/desktop-wallpaper.jpg; \
         pinned=""; \
-        for app in xfce4-appfinder thunar xfce4-terminal mousepad firefox-esr chromium xfce4-settings-manager; do \
-            [ -f "/usr/share/applications/$app.desktop" ] && pinned="$pinned$app.desktop;"; \
+        for app in xfce4-appfinder thunar xfce4-terminal org.xfce.mousepad firefox-esr chromium xfce-settings-manager; do \
+            f="/usr/share/applications/$app.desktop"; [ -f "$f" ] && pinned="$pinned$f;"; \
         done; \
         sed -i "s|@PINNED@|$pinned|" /etc/skel/.config/xfce4/panel/docklike-20.rc; \
     fi

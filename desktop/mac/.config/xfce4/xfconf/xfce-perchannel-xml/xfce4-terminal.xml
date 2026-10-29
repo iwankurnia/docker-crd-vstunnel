@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfce4-terminal" version="1.0">
+  <!-- xfce4-terminal keeps its settings in this xfconf channel (terminalrc is
+       only imported once, on first run). Window borders stay on so xfwm4
+       decorates the terminal like every other window. -->
+  <property name="font-name" type="string" value="JetBrains Mono 11"/>
+  <property name="misc-menubar-default" type="bool" value="false"/>
+  <property name="misc-toolbar-default" type="bool" value="false"/>
+  <property name="misc-borders-default" type="bool" value="true"/>
+  <property name="misc-cursor-shape" type="string" value="TERMINAL_CURSOR_SHAPE_IBEAM"/>
+  <property name="misc-cursor-blinks" type="bool" value="true"/>
+  <property name="misc-bell" type="bool" value="false"/>
+  <property name="scrollbar-position" type="string" value="TERMINAL_SCROLLBAR_RIGHT"/>
+  <property name="scrolling-lines" type="uint" value="20000"/>
+  <property name="scrolling-unlimited" type="bool" value="false"/>
+  <property name="color-foreground" type="string" value="#24292e"/>
+  <property name="color-background" type="string" value="#ffffff"/>
+  <property name="color-cursor" type="string" value="#044289"/>
+  <property name="color-selection-use-default" type="bool" value="false"/>
+  <property name="color-selection" type="string" value="#0366d6"/>
+  <property name="color-selection-background" type="string" value="#dbedff"/>
+  <property name="color-bold" type="string" value="#24292e"/>
+  <property name="color-palette" type="string" value="#24292e;#d73a49;#22863a;#b08800;#0366d6;#6f42c1;#1b7c83;#6a737d;#959da5;#cb2431;#28a745;#dbab09;#2188ff;#8a63d2;#3192aa;#d1d5da"/>
+</channel>

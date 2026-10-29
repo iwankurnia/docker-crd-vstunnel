@@ -28,13 +28,21 @@ if [ -d "$USER_HOME/workspace" ]; then
 fi
 
 # A system D-Bus keeps XFCE and polkit quiet. Only in a desktop (CRD) build;
-# harmless if it fails.
-if [ "$(cat /etc/crd-enabled 2>/dev/null)" = true ] && [ ! -S /run/dbus/system_bus_socket ]; then
-    mkdir -p /run/dbus && rm -f /run/dbus/pid
+# harmless if it fails. /run survives a container restart, so a stale pid file
+# and socket from the previous run are cleared first.
+if [ "$(cat /etc/crd-enabled 2>/dev/null)" = true ]; then
+    mkdir -p /run/dbus && rm -f /run/dbus/pid /run/dbus/system_bus_socket
     dbus-daemon --system --fork >/dev/null 2>&1 || log "system dbus not started (continuing)"
 fi
+
+# Per-user runtime directory (normally made by systemd-logind, absent here).
+# PipeWire, which the Chrome Remote Desktop host starts for remote audio,
+# refuses to create its socket without one, which leaves the session muted.
+RUNTIME_DIR="/run/user/$USER_UID"
+mkdir -p "$RUNTIME_DIR" && chmod 0700 "$RUNTIME_DIR" && chown "$USER_UID:$USER_GID" "$RUNTIME_DIR"
 
 # Drop privileges (no fork, so signals reach services.sh directly).
 exec setpriv --reuid="$USER_UID" --regid="$USER_GID" --init-groups \
     env HOME="$USER_HOME" USER="$USERNAME" LOGNAME="$USERNAME" SHELL=/bin/bash \
+        XDG_RUNTIME_DIR="$RUNTIME_DIR" \
     /usr/local/bin/services.sh

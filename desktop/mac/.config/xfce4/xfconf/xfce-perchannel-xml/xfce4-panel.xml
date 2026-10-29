@@ -13,7 +13,13 @@
       <property name="position-locked" type="bool" value="true"/>
       <property name="size" type="uint" value="28"/>
       <property name="icon-size" type="uint" value="18"/>
-      <property name="background-style" type="uint" value="0"/>
+      <property name="background-style" type="uint" value="1"/>
+      <property name="background-rgba" type="array">
+        <value type="double" value="0.965"/>
+        <value type="double" value="0.965"/>
+        <value type="double" value="0.973"/>
+        <value type="double" value="0.88"/>
+      </property>
       <property name="plugin-ids" type="array">
         <value type="int" value="1"/>
         <value type="int" value="2"/>
@@ -26,16 +32,25 @@
         <value type="int" value="8"/>
       </property>
     </property>
-    <!-- The Dock: bottom centre, auto-width, pinned + running apps -->
+    <!-- The Dock: bottom centre, auto-width, pinned + running apps. The panel is
+         transparent; gtk.css draws the rounded tray on the docklike widget. -->
     <property name="panel-2" type="empty">
       <property name="position" type="string" value="p=10;x=0;y=0"/>
       <property name="length" type="uint" value="1"/>
       <property name="length-adjust" type="bool" value="true"/>
       <property name="position-locked" type="bool" value="true"/>
-      <property name="size" type="uint" value="60"/>
+      <property name="size" type="uint" value="70"/>
       <property name="icon-size" type="uint" value="0"/>
-      <property name="background-style" type="uint" value="0"/>
-      <property name="autohide-behavior" type="uint" value="0"/>
+      <property name="background-style" type="uint" value="1"/>
+      <property name="background-rgba" type="array">
+        <value type="double" value="1.0"/>
+        <value type="double" value="1.0"/>
+        <value type="double" value="1.0"/>
+        <value type="double" value="0.0"/>
+      </property>
+      <!-- autohide-behavior: 0 never, 1 intelligently (only when a window would
+           overlap the Dock), 2 always -->
+      <property name="autohide-behavior" type="uint" value="1"/>
       <property name="plugin-ids" type="array">
         <value type="int" value="20"/>
       </property>

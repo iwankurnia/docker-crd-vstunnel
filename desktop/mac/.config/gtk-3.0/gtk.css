@@ -1,15 +1,17 @@
 /* macOS-style chrome for the XFCE panels. Edit freely; the panel reloads on
-   the next session. Panel 1 is the menu bar, panel 2 is the Dock. */
+   the next session. xfce4-panel gives every panel the same CSS classes
+   (.xfce4-panel), so the per-panel colours live in xfce4-panel.xml
+   (background-style 1 + background-rgba); this file styles what is common. */
 
-/* Menu bar: light, slightly translucent, hairline at the bottom */
-.xfce4-panel.panel-1 {
-  background-color: rgba(246, 246, 248, 0.88);
-  color: #1d1d1f;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.10);
-  font-weight: 500;
-}
-.xfce4-panel.panel-1 button,
-.xfce4-panel.panel-1 button.flat {
+/* Flat, rounded panel buttons (menu, launchers, tray, clock) */
+.xfce4-panel.background,
+.xfce4-panel.background button,
+.xfce4-panel.background label { color: #1d1d1f; font-weight: 500; }
+/* Symbolic tray icons take the text colour; Arc would leave them pale */
+.xfce4-panel.background image,
+.xfce4-panel.background button image { color: #1d1d1f; opacity: 1; -gtk-icon-effect: none; }
+.xfce4-panel button,
+.xfce4-panel button.flat {
   background: transparent;
   border: none;
   border-radius: 6px;
@@ -17,22 +19,26 @@
   margin: 3px 0;
   color: inherit;
   box-shadow: none;
+  transition: background-color 120ms ease-in-out;
 }
-.xfce4-panel.panel-1 button:hover,
-.xfce4-panel.panel-1 button:checked,
-.xfce4-panel.panel-1 button:active {
+.xfce4-panel button:hover,
+.xfce4-panel button:checked,
+.xfce4-panel button:active {
   background-color: rgba(0, 0, 0, 0.08);
 }
-.xfce4-panel.panel-1 .separator { color: transparent; }
+.xfce4-panel .separator { color: transparent; }
 
-/* Dock: frosted tray with rounded top corners, flush with the bottom edge */
-.xfce4-panel.panel-2 {
+/* Dock tray: the Dock panel itself is fully transparent (xfce4-panel.xml), the
+   docklike widget draws the frosted, rounded tray floating above the edge. */
+#docklike-plugin {
   background-color: rgba(255, 255, 255, 0.66);
   border: 1px solid rgba(0, 0, 0, 0.10);
-  border-bottom: none;
-  border-radius: 18px 18px 0 0;
-  padding: 3px 8px 0 8px;
+  border-radius: 18px;
+  padding: 3px 6px;
+  margin: 2px 0 6px 0;
 }
+
+/* Dock items (docklike plugin) */
 #docklike-plugin .group {
   background: transparent;
   border: none;

@@ -23,6 +23,7 @@ ports and works behind NAT, on a home server, a VPS or a laptop.
 | `entrypoint.sh` | Runs as root at start: sets the user's password and sudo policy, then drops to the user |
 | `services.sh` | Runs as the user: registers/starts the CRD host and the VS Code tunnel, restarts either if it dies |
 | `.env.example` | Settings to copy to `.env` |
+| `.gitattributes` | Forces LF line endings on checkout so the scripts run inside the Linux image |
 | `workspace/` | Bind-mounted into the container at `~/workspace` |
 
 ## Settings (`.env`)
@@ -30,7 +31,7 @@ ports and works behind NAT, on a home server, a VPS or a laptop.
 | Variable | Used for |
 |---|---|
 | `COMPUTER_NAME` | Container hostname, VS Code tunnel name **and** Chrome Remote Desktop device name. Lowercase letters, digits, hyphens; max 20 characters |
-| `USERNAME` | The Linux account inside the container. Baked into the image, so changing it needs a rebuild and a fresh home volume |
+| `CONTAINER_USER` | The Linux account inside the container. Baked into the image, so changing it needs a rebuild and a fresh home volume |
 | `DESKTOP_LAYOUT` | `mac` or `windows`, baked in at build time (see **Desktop layout**) |
 | `NODE_DEFAULT`, `DOTNET_CHANNELS` | Node major and .NET SDK channels baked in at build time (see **Developer tools**) |
 | `USER_PASSWORD` | Password for that account. Applied at every start; `sudo` asks for it. Empty = passwordless sudo (a warning is logged) |
@@ -43,7 +44,7 @@ ports and works behind NAT, on a home server, a VPS or a laptop.
 ## First run
 
 ```bash
-cp .env.example .env     # set COMPUTER_NAME, USERNAME, USER_PASSWORD at least
+cp .env.example .env     # set COMPUTER_NAME, CONTAINER_USER, USER_PASSWORD at least
 docker compose up -d --build
 docker compose logs -f
 ```
@@ -62,7 +63,7 @@ the `home` volume, so it is only needed once. The machine then appears under
 `https://vscode.dev/tunnel/<COMPUTER_NAME>`.
 
 To sign in with a Microsoft account instead of GitHub, do it once by hand
-(replace `remote` with your `USERNAME`):
+(replace `remote` with your `CONTAINER_USER`):
 
 ```bash
 docker compose exec -u remote desktop code tunnel user login --provider microsoft
@@ -89,7 +90,7 @@ docker compose exec -u remote desktop code tunnel user login --provider microsof
 3. Afterwards you may blank `CRD_CODE` and `CRD_PIN` in `.env`; the registration
    is already stored in the `home` volume.
 
-**Option B: by hand** (replace `remote` with your `USERNAME`).
+**Option B: by hand** (replace `remote` with your `CONTAINER_USER`).
 
 ```bash
 docker compose exec -u remote desktop bash
@@ -113,28 +114,29 @@ volume, so it survives restarts and image rebuilds.
 
 `DESKTOP_LAYOUT=mac`
 
-![macOS-style layout: top menu bar, Dock, WhiteSur icons](docs/layout-mac.png)
+![macOS-style layout: top menu bar, Dock](docs/layout-mac.png)
 
 `DESKTOP_LAYOUT=windows`
 
 ![Windows-style layout: bottom taskbar, Fluent icons](docs/layout-windows.png)
 
-*Renders of the shipped configuration with the real WhiteSur / Fluent icon artwork,
+*Renders of an earlier revision (WhiteSur icons, Arc theme) with the real icon artwork,
 Inter and JetBrains Mono and the shipped wallpaper, not screenshots of a running
 container.*
 
-Set `DESKTOP_LAYOUT` in `.env` before building. Both layouts use the light Arc
-theme and the Inter font; neither uses a dark theme. Icons match the platform:
-WhiteSur (the macOS-style set) for `mac` and Fluent (the Windows 11-style set)
-for `windows`, each pinned to a release and backed by KDE's Breeze set so any
-icon they lack still renders. Neither pack ships a generic `start-here`
-icon, so the menu button uses WhiteSur's Apple-style `start-here` in `mac` and
-Fluent's four-square `view-app-grid-symbolic` in `windows`.
+Set `DESKTOP_LAYOUT` in `.env` before building. Both layouts use the Inter font
+and a light theme: `mac` the Qogir GTK and window theme (light grey, flat),
+`windows` the Arc theme. Icons: `mac` uses the Qogir set, backed by WhiteSur
+(the macOS-style set, also installed) and then KDE's Breeze for anything it
+lacks; `windows` uses Fluent (the Windows 11-style set) backed by Breeze. All
+themes are pinned to a release. The `mac` menu button uses WhiteSur's
+Apple-style `start-here` by file path; `windows` uses Fluent's four-square
+`view-app-grid-symbolic`.
 
 | | `mac` (default) | `windows` |
 |---|---|---|
 | Bar | Menu bar across the top: app menu and active-app menu on the left; search, settings, volume, tray, notification bell and clock on the right | Taskbar across the bottom: Start, search, pinned File Explorer/Terminal/Browser, grouped task buttons; notification bell, volume, tray, time-over-date clock and show-desktop corner on the right |
-| Dock | Bottom centre, auto-width, pinned + running apps with dot indicators (docklike plugin) | none (task buttons live in the taskbar) |
+| Dock | Floating rounded tray at the bottom centre, auto-width, pinned + running apps with dot indicators (docklike plugin); hides only when a window would overlap it | none (task buttons live in the taskbar) |
 | Window buttons | Close, minimise, maximise on the **left** | Minimise, maximise, close on the **right** |
 | Backdrop | Soft peach-to-blue gradient wallpaper (`desktop/wallpaper/mac.jpg`, swap for any image) | Plain light-blue |
 | Keys | Super+Space launcher, Super+Return terminal, Super+Q close, Super+M minimise, Super+Tab switch | Super opens Start, Super+E files, Super+R run, Super+D desktop, Super+Up/Left/Right maximise/tile |
@@ -144,7 +146,7 @@ behave as expected in the `mac` layout.
 
 The layout is copied into the user's home when the home volume is first created.
 To switch layouts on an existing volume, rebuild and re-apply (replace `remote`
-with your `USERNAME`):
+with your `CONTAINER_USER`):
 
 ```bash
 docker compose build && docker compose exec -u remote desktop apply-desktop-layout.sh && docker compose up -d --force-recreate
@@ -153,9 +155,11 @@ docker compose build && docker compose exec -u remote desktop apply-desktop-layo
 Anything you change later in XFCE's own settings dialogs is kept, since it lives
 in the same home volume.
 
-The panel chrome (translucent bars, rounded Dock, task-button underline, pop-up
-corners) comes from `~/.config/gtk-3.0/gtk.css`, which you can edit and reload
-with a new session. Thunar opens in icon view with the sidebar, the terminal uses
+The panel colours (translucent menu bar and Dock, taskbar) are set per panel in
+`xfce4-panel.xml` (`background-style` 1 + `background-rgba`), because xfce4-panel
+gives every panel the same CSS classes. The rest of the chrome (flat buttons,
+task-button underline, pop-up corners) comes from `~/.config/gtk-3.0/gtk.css`,
+which you can edit and reload with a new session. Thunar opens in icon view with the sidebar, the terminal uses
 JetBrains Mono on a light GitHub-style palette, and the desktop shows no icons in
 `mac` and This PC / user folder / Recycle Bin in `windows`.
 
@@ -244,6 +248,11 @@ docker compose build --pull --no-cache && docker compose up -d
   account can reach this desktop. `USER_PASSWORD` and `CRD_PIN` sit in plain text
   in `.env` (gitignored); blank `CRD_PIN` once registered. The container runs
   unprivileged with no extra capabilities; only the short start-up runs as root.
+- **Line endings.** The scripts are copied straight into the Linux image, so
+  they must be checked out with LF. `.gitattributes` enforces that; if you
+  edited a file on Windows and the container loops with
+  `env: 'bash': No such file or directory`, run
+  `git add --renormalize . && git checkout -- .` and rebuild.
 - **Resolution.** The desktop follows the client window: with the dummy Xorg
   driver and RANDR the host adds display modes on the fly whenever the client
   has "Resize to fit" on (the default in the web client and the app). The first
