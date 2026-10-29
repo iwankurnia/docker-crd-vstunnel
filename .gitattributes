@@ -1,0 +1,7 @@
+# Everything in this repo is copied into a Linux image, so text files must
+# always be checked out with LF, whatever core.autocrlf is set to on the host.
+# A CRLF shebang makes the entrypoint fail with "env: 'bash\r': No such file".
+* text=auto eol=lf
+
+*.jpg binary
+*.png binary
