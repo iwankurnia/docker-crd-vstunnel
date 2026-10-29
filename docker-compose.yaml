@@ -1,7 +1,7 @@
 # Debian desktop reachable via Chrome Remote Desktop and a VS Code tunnel.
 # No ports are published: both services make outbound connections only.
 #
-#   cp .env.example .env        # set COMPUTER_NAME, USERNAME, USER_PASSWORD, ...
+#   cp .env.example .env        # set COMPUTER_NAME, CONTAINER_USER, USER_PASSWORD, ...
 #   docker compose up -d --build
 #   docker compose logs -f      # VS Code device-login URL appears here
 
@@ -12,8 +12,8 @@ services:
     build:
       context: .
       args:
-        # Changing USERNAME needs a rebuild (the account is created in the image).
-        USERNAME: ${USERNAME:-remote}
+        # Changing CONTAINER_USER needs a rebuild (the account is created in the image).
+        USERNAME: ${CONTAINER_USER:-remote}
         # false = headless image: no desktop, X server, themes, icons or UI apps.
         CRD_ENABLED: ${CRD_ENABLED:-true}
         # "mac" or "windows" desktop layout; a rebuild applies a change.
@@ -48,9 +48,9 @@ services:
     volumes:
       # Whole home directory: keeps the Chrome Remote Desktop registration,
       # the VS Code tunnel sign-in, extensions and settings across restarts.
-      - home:/home/${USERNAME:-remote}
+      - home:/home/${CONTAINER_USER:-remote}
       # Your projects, visible on the host as ./workspace
-      - ./workspace:/home/${USERNAME:-remote}/workspace
+      - ./workspace:/home/${CONTAINER_USER:-remote}/workspace
     shm_size: 1g
     stop_grace_period: 30s
 
