@@ -58,7 +58,7 @@ RUN set -eu; \
     if [ "$CRD_ENABLED" = true ]; then \
         apt-get update; \
         apt-get install -y --no-install-recommends \
-            dbus-x11 xfce4 xfce4-terminal thunar mousepad librsvg2-common \
+            dbus-x11 xfce4 xfce4-terminal thunar mousepad librsvg2-common gvfs \
             xserver-xorg-video-dummy xvfb xbase-clients x11-xserver-utils \
             fonts-dejavu fonts-inter fonts-jetbrains-mono \
             arc-theme breeze-icon-theme adwaita-icon-theme gtk-update-icon-cache \
